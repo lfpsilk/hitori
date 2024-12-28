@@ -8,6 +8,13 @@ process.on('unhandledRejection', console.error)
 */
 
 require('./settings');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+require('dotenv').config(); // Untuk mendukung penggunaan .env file
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-pro"
+});
 const fs = require('fs');
 const os = require('os');
 const util = require('util');
@@ -42,7 +49,7 @@ const imageToBase64 = require('image-to-base64');
 const { exec, spawn, execSync } = require('child_process');
 const { Primbon } = require('scrape-primbon');
 const primbon = new Primbon();
-const PDFDocument = require('pdfkit');
+/* const PDFDocument = require('pdfkit'); */
 const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, getBinaryNodeChildren, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType } = require('@whiskeysockets/baileys');
 
 const prem = require('./src/premium');
@@ -109,6 +116,7 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 		const isNsfw = m.isGroup ? db.groups[m.chat].nsfw : false
 		
 		// Fake
+		/*
 		const fkontak = {
 			key: {
 				remoteJid: '0@s.whatsapp.net',
@@ -124,7 +132,7 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 				}
 			}
 		}
-		
+		*/
 		// Reset Limit
 		cron.schedule('00 00 * * *', () => {
 			let user = Object.keys(db.users)
@@ -455,7 +463,19 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 				console.log('.')
 			}
 			break
-			
+			case 'arbot': {
+    if (!q) return m.reply('Masukkan teks untuk Ar-Bot!');
+    
+    try {
+        const result = await model.generateContent(q);
+        m.reply(result.response.text()); // Kirim balasan ke chat
+    } catch (error) {
+        console.error(error);
+        m.reply('Terjadi kesalahan saat memproses permintaan Anda.');
+    }
+}
+break;
+
 			// Owner Menu
 			case 'mode': {
 				if (!isCreator) return m.reply(mess.owner)
@@ -833,18 +853,6 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 					} catch (e) {
 						m.reply('Gagal Add User')
 					}
-				}
-			}
-			break
-			case 'kick': {
-				if (!m.isGroup) return m.reply(mess.group)
-				if (!m.isAdmin) return m.reply(mess.admin)
-				if (!m.isBotAdmin) return m.reply(mess.botAdmin)
-				if (!text && !m.quoted) {
-					m.reply(`Contoh: ${prefix + command} 62xxx`)
-				} else {
-					const numbersOnly = text ? text.replace(/\D/g, '') + '@s.whatsapp.net' : m.quoted?.sender
-					await naze.groupParticipantsUpdate(m.chat, [numbersOnly], 'remove').catch((err) => m.reply('Gagal Kick User!'))
 				}
 			}
 			break
@@ -2303,24 +2311,11 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 				m.reply(`Khodam dari *${text}* adalah *${anu}*`)
 			}
 			break
-			case 'rate': case 'nilai': {
-				let rate = Math.floor(Math.random() * 100)
-				m.reply(`Rate Bot : *${rate}%*`)
-			}
-			break
 			case 'jodohku': {
 				if (!m.isGroup) return m.reply(mess.group)
 				let member = (store.groupMetadata[m.chat].participants || m.metadata.participants).map(a => a.id)
 				let jodoh = pickRandom(member)
 				m.reply(`👫Jodoh mu adalah\n@${m.sender.split('@')[0]} ❤ @${jodoh.split('@')[0]}`);
-			}
-			break
-			case 'jadian': {
-				if (!m.isGroup) return m.reply(mess.group)
-				let member = (store.groupMetadata[m.chat].participants || m.metadata.participants).map(a => a.id)
-				let jadian1 = pickRandom(member)
-				let jadian2 = pickRandom(member)
-				m.reply(`Ciee yang Jadian💖 Jangan lupa Donasi🗿\n@${jadian1.split('@')[0]} ❤ @${jadian2.split('@')[0]}`);
 			}
 			break
 			case 'fitnah': {
@@ -2613,63 +2608,22 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 ╭──❍「 *USER INFO* 」❍
 ├ *Nama* : ${m.pushName ? m.pushName : 'Tanpa Nama'}
 ├ *Id* : @${m.sender.split('@')[0]}
-├ *User* : ${isVip ? 'VIP' : isPremium ? 'PREMIUM' : 'FREE'}
-├ *Limit* : ${isVip ? 'VIP' : db.users[m.sender].limit }
-├ *Uang* : ${db.users[m.sender] ? db.users[m.sender].uang.toLocaleString('id-ID') : '0'}
 ╰─┬────❍
 ╭─┴─❍「 *BOT INFO* 」❍
 ├ *Nama Bot* : ${botname}
 ├ *Powered* : @${'0@s.whatsapp.net'.split('@')[0]}
-├ *Owner* : @${owner[0].split('@')[0]}
-├ *Mode* : ${naze.public ? 'Public' : 'Self'}
-├ *Prefix* :${db.set[botNumber].multiprefix ? '「 MULTI-PREFIX 」' : ' *'+prefix+'*' }
 ╰─┬────❍
-╭─┴─❍「 *ABOUT* 」❍
-├ *Tanggal* : ${tanggal}
-├ *Hari* : ${hari}
-├ *Jam* : ${jam} WIB
-╰──────❍
 ╭──❍「 *BOT* 」❍
-│${setv} ${prefix}profile
-│${setv} ${prefix}claim
-│${setv} ${prefix}buy [item] (nominal)
-│${setv} ${prefix}transfer
-│${setv} ${prefix}leaderboard
-│${setv} ${prefix}request (text)
-│${setv} ${prefix}react (emoji)
-│${setv} ${prefix}tagme
-│${setv} ${prefix}runtime
-│${setv} ${prefix}totalfitur
-│${setv} ${prefix}ping
 │${setv} ${prefix}afk
 │${setv} ${prefix}rvo (reply pesan viewone)
-│${setv} ${prefix}inspect (url gc)
-│${setv} ${prefix}addmsg
-│${setv} ${prefix}delmsg
-│${setv} ${prefix}getmsg
-│${setv} ${prefix}listmsg
-│${setv} ${prefix}q (reply pesan)
 │${setv} ${prefix}menfes (62xxx|nama samaran)
 ╰─┬────❍
 ╭─┴❍「 *GROUP* 」❍
-│${setv} ${prefix}add (62xxx)
-│${setv} ${prefix}kick (@tag/62xxx)
-│${setv} ${prefix}promote (@tag/62xxx)
-│${setv} ${prefix}demote (@tag/62xxx)
-│${setv} ${prefix}setname (nama baru gc)
-│${setv} ${prefix}setdesc (desk)
-│${setv} ${prefix}setppgc (reply imgnya)
 │${setv} ${prefix}delete (reply pesan)
 │${setv} ${prefix}linkgrup
-│${setv} ${prefix}revoke
-│${setv} ${prefix}tagall
 │${setv} ${prefix}hidetag
 │${setv} ${prefix}totag (reply pesan)
 │${setv} ${prefix}listonline
-│${setv} ${prefix}group set
-│${setv} ${prefix}antilink (on/off)
-│${setv} ${prefix}welcome (on/off)
-│${setv} ${prefix}antidelete (on/off)
 ╰─┬────❍
 ╭─┴❍「 *SEARCH* 」❍
 │${setv} ${prefix}ytsearch (query)
@@ -2700,43 +2654,15 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 ╭─┴❍「 *TOOLS* 」❍
 │${setv} ${prefix}get (url)
 │${setv} ${prefix}hd (reply pesan)
-│${setv} ${prefix}toaudio (reply pesan)
-│${setv} ${prefix}tomp3 (reply pesan)
-│${setv} ${prefix}tovn (reply pesan)
-│${setv} ${prefix}toimage (reply pesan)
-│${setv} ${prefix}toptv (reply pesan)
-│${setv} ${prefix}tourl (reply pesan)
-│${setv} ${prefix}tts (textnya)
-│${setv} ${prefix}toqr (textnya)
 │${setv} ${prefix}ssweb (url)
 │${setv} ${prefix}sticker (send/reply img)
-│${setv} ${prefix}colong (reply stiker)
-│${setv} ${prefix}smeme (send/reply img)
-│${setv} ${prefix}emojimix 🙃+💀
 │${setv} ${prefix}nulis
 │${setv} ${prefix}readmore text1|text2
-│${setv} ${prefix}qc (pesannya)
 │${setv} ${prefix}translate
-│${setv} ${prefix}wasted (send/reply img)
-│${setv} ${prefix}triggered (send/reply img)
 │${setv} ${prefix}shorturl (urlnya)
 │${setv} ${prefix}gitclone (urlnya)
-│${setv} ${prefix}fat (reply audio)
-│${setv} ${prefix}fast (reply audio)
-│${setv} ${prefix}bass (reply audio)
-│${setv} ${prefix}slow (reply audio)
-│${setv} ${prefix}tupai (reply audio)
-│${setv} ${prefix}deep (reply audio)
-│${setv} ${prefix}robot (reply audio)
-│${setv} ${prefix}blown (reply audio)
-│${setv} ${prefix}reverse (reply audio)
-│${setv} ${prefix}smooth (reply audio)
-│${setv} ${prefix}earrape (reply audio)
-│${setv} ${prefix}nightcore (reply audio)
-│${setv} ${prefix}getexif (reply sticker)
 ╰─┬────❍
 ╭─┴❍「 *AI* 」❍
-│${setv} ${prefix}ai (query)
 │${setv} ${prefix}simi (query)
 │${setv} ${prefix}txt2img (query)
 ╰─┬────❍
@@ -2746,19 +2672,13 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 ╰─┬────❍
 ╭─┴❍「 *GAME* 」❍
 │${setv} ${prefix}tictactoe
-│${setv} ${prefix}suit
-│${setv} ${prefix}slot
 │${setv} ${prefix}math (level)
-│${setv} ${prefix}begal
-│${setv} ${prefix}casino (nominal)
-│${setv} ${prefix}rampok (@tag)
 │${setv} ${prefix}tekateki
 │${setv} ${prefix}tebaklirik
 │${setv} ${prefix}tebakkata
 │${setv} ${prefix}tebakbom
 │${setv} ${prefix}susunkata
 │${setv} ${prefix}tebakkimia
-│${setv} ${prefix}caklontong
 │${setv} ${prefix}tebaknegara
 │${setv} ${prefix}tebakgambar
 │${setv} ${prefix}tebakbendera
@@ -2770,55 +2690,21 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 │${setv} ${prefix}kapan (text)
 │${setv} ${prefix}kerangajaib (text)
 │${setv} ${prefix}cekmati (nama lu)
-│${setv} ${prefix}ceksifat
 │${setv} ${prefix}cekkhodam (nama lu)
 │${setv} ${prefix}rate (reply pesan)
-│${setv} ${prefix}jodohku
-│${setv} ${prefix}jadian
-│${setv} ${prefix}fitnah
-│${setv} ${prefix}halah (text)
-│${setv} ${prefix}hilih (text)
-│${setv} ${prefix}huluh (text)
-│${setv} ${prefix}heleh (text)
-│${setv} ${prefix}holoh (text)
 ╰─┬────❍
 ╭─┴❍「 *RANDOM* 」❍
 │${setv} ${prefix}randomcolor
 │${setv} ${prefix}coffe
-╰─┬────❍
-╭─┴❍「 *OWNER* 」❍
-│${setv} ${prefix}mode (public or self)
-│${setv} ${prefix}setbio
-│${setv} ${prefix}setppbot
-│${setv} ${prefix}join
-│${setv} ${prefix}leave
-│${setv} ${prefix}block
-│${setv} ${prefix}listblock
-│${setv} ${prefix}openblock
-│${setv} ${prefix}listpc
-│${setv} ${prefix}listgc
-│${setv} ${prefix}creategc
-│${setv} ${prefix}addprem
-│${setv} ${prefix}delprem
-│${setv} ${prefix}listprem
-│${setv} ${prefix}addlimit
-│${setv} ${prefix}adduang
-│${setv} ${prefix}bot --settings
-│${setv} ${prefix}bot settings
-│${setv} ${prefix}getsession
-│${setv} ${prefix}delsession
-│${setv} ${prefix}delsampah
-│${setv} $
-│${setv} >
-│${setv} <
 ╰──────❍`
 				await naze.sendMessage(m.chat, {
 					document: fake.docs,
 					fileName: ucapanWaktu,
-					mimetype: pickRandom(fake.listfakedocs),
 					fileLength: '100000000000000',
 					pageCount: '999',
+					/* mimetype: pickRandom(fake.listfakedocs), */
 					caption: menunya,
+					
 					contextInfo: {
 						mentionedJid: [m.sender, '0@s.whatsapp.net', owner[0] + '@s.whatsapp.net'],
 						forwardingScore: 10,

@@ -1,0 +1,68 @@
+const fs = require('fs');
+const chalk = require('chalk');
+
+//~~~~~~~~~~~~< GLOBAL SETTINGS >~~~~~~~~~~~~\\
+
+global.owner = ['6285174472744']
+global.packname = 'Bot WhatsApp'
+global.author = 'AR-bot'
+global.botname = 'Ar-Bot'
+global.listv = ['•','●','■','✿','▲','➩','➢','➣','➤','✦','✧','△','❀','○','□','♤','♡','◇','♧','々','〆']
+global.tempatDB = 'database.json'
+global.pairing_code = true
+
+global.fake = {
+	anonim: 'https://telegra.ph/file/95670d63378f7f4210f03.png',
+	thumbnailUrl: 'https://telegra.ph/file/fe4843a1261fc414542c4.jpg',
+	thumbnail: fs.readFileSync('./src/media/naze.png'),
+	docs: fs.readFilxyeSync('./src/media/fake.pdf'),
+	listfakedocs: [''],
+}
+
+global.my = {
+	yt: 'https://youtube.com/c/',
+	gh: 'https://github.com/',
+	gc: 'https://chat.whatsapp.com/Hx9vcBVhbc04KLVGPFtH2R',
+	ch: '',
+}
+
+global.limit = {
+	free: 100,
+	premium: 999,
+	vip: 'VIP'
+}
+
+global.uang = {
+	free: 10000,
+	premium: 1000000,
+	vip: 10000000
+}
+
+global.mess = {
+	owner: 'Fitur Khusus Owner!',
+	admin: 'Fitur Khusus Admin!',
+	botAdmin: 'Bot Bukan Admin!',
+	group: 'Gunakan Di Group!',
+	private: 'Gunakan Di Privat Chat!',
+	prem: 'Khusus User Premium!',
+	wait: 'Loading...',
+	error: 'Error!',
+	done: 'Done'
+}
+
+global.APIs = {
+	zaynn: 'https://api.zaynn.my.id/api',
+}
+global.APIKeys = {
+	'https://api.zaynn.my.id/api': 'Najedev',
+}
+
+//~~~~~~~~~~~~~~~< PROCESS >~~~~~~~~~~~~~~~\\
+
+let file = require.resolve(__filename)
+fs.watchFile(file, () => {
+	fs.unwatchFile(file)
+	console.log(chalk.redBright(`Update ${__filename}`))
+	delete require.cache[file]
+	require(file)
+});
