@@ -57,7 +57,7 @@ const { LoadDataBase } = require('./src/message');
 const { TelegraPh, UguuSe } = require('./lib/uploader');
 const { toAudio, toPTT, toVideo } = require('./lib/converter');
 const { imageToWebp, videoToWebp, writeExif } = require('./lib/exif');
-const { chatGpt, tiktokDl, facebookDl, instaDl, instaDownload, instaStory, ytMp4, ytMp3, allDl, quotedLyo, Ytdl, cekKhodam, simi, mediafireDl } = require('./lib/screaper');
+const { chatGpt, tiktokDl, facebookDl, instaDl, instaDownload, instaStory, ytMp4, ytMp3, allDl, quotedLyo, Ytdl, mediafireDl } = require('./lib/screaper');
 const { rdGame, iGame, tGame, gameSlot, gameCasinoSolo, gameMerampok, gameBegal, daily, buy, setLimit, addLimit, addUang, setUang, transfer } = require('./lib/game');
 const { pinterest, pinterest2, wallpaper, wikimedia, quotesAnime, happymod, umma, ringtone, jadwalsholat, styletext } = require('./lib/scraper');
 const { unixTimestampSeconds, generateMessageTag, processTime, webApi, getRandom, getBuffer, fetchJson, runtime, clockString, sleep, isUrl, getTime, formatDate, tanggal, formatp, jsonformat, reSize, toHD, logic, generateProfilePicture, bytesToSize, checkBandwidth, getSizeMedia, parseMention, getGroupAdmins, readFileTxt, readFileJson, getHashedPassword, generateAuthToken, cekMenfes, generateToken, batasiTeks, randomText, isEmoji, getTypeUrlMedia, pickRandom, getAllHTML } = require('./lib/function');
@@ -82,7 +82,7 @@ let tebakkimia = db.game.tebakkimia = []
 let caklontong = db.game.caklontong = []
 let tebaknegara = db.game.tebaknegara = []
 let tebakgambar = db.game.tebakgambar = []
-let tebakbendera = db.game.tebakbendera = []
+
 
 module.exports = naze = async (naze, m, chatUpdate, store) => {
 	try {
@@ -380,36 +380,6 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 			}
 		}
 		
-		// Game
-		const games = { tebaklirik, tekateki, tebaklagu, tebakkata, kuismath, susunkata, tebakkimia, caklontong, tebaknegara, tebakgambar, tebakbendera }
-		for (let gameName in games) {
-			let game = games[gameName];
-			let id = iGame(game, m.chat);
-			if (m.quoted && id == m.quoted.id && !isCmd) {
-				if (gameName == 'kuismath') {
-					jawaban = game[m.chat + id].jawaban
-					const difficultyMap = { 'noob': 1, 'easy': 1.5, 'medium': 2.5, 'hard': 4, 'extreme': 5, 'impossible': 6, 'impossible2': 7 };
-					let randMoney = difficultyMap[kuismath[m.chat + id].mode]
-					if (!isNaN(budy)) {
-						if (budy.toLowerCase() == jawaban) {
-							db.users[m.sender].uang += randMoney * 1000
-							await m.reply(`Jawaban Benar 🎉\nBonus Uang 💰 *+${randMoney * 1000}*`)
-							delete kuismath[m.chat + id]
-						} else m.reply('*Jawaban Salah!*')
-					}
-				} else {
-					jawaban = game[m.chat + id].jawaban
-					let jawabBenar = /tekateki|tebaklirik|tebaklagu|tebakkata|tebaknegara|tebakbendera/.test(gameName) ? (similarity(budy.toLowerCase(), jawaban) >= almost) : (budy.toLowerCase() == jawaban)
-					let bonus = gameName == 'caklontong' ? 9999 : gameName == 'tebaklirik' ? 4299 : gameName == 'susunkata' ? 2989 : 3499
-					if (jawabBenar) {
-						db.users[m.sender].uang += bonus * 1
-						await m.reply(`Jawaban Benar 🎉\nBonus Uang 💰 *+${bonus}*`)
-						delete game[m.chat + id]
-					} else m.reply('*Jawaban Salah!*')
-				}
-			}
-		}
-		
 		// Family 100
 		if (m.chat in family100) {
 			if (m.quoted && m.quoted.id == family100[m.chat].id && !isCmd) {
@@ -456,14 +426,42 @@ module.exports = naze = async (naze, m, chatUpdate, store) => {
 			user.afkReason = ''
 		}
 		
-		
+		// Cek apakah input pengguna cocok dengan kata kunci di database
+if (db.database && typeof db.database === 'object') {
+    let msgs = db.database;
+    if (budy.toLowerCase() in msgs) {
+        await naze.relayMessage(m.chat, msgs[budy.toLowerCase()], {});
+        return; // Hentikan eksekusi setelah pesan dikirim
+    }
+}
+
+// Switch-case utama
+switch (command) {
+    case 'get': {
+        if (!text) return m.reply(`Example: ${prefix + command} file name\n\nLihat list pesan dengan ${prefix}listmsg`);
+        let msgs = db.database;
+        if (!(text.toLowerCase() in msgs)) return m.reply(`'${text}' tidak terdaftar di list pesan`);
+        await naze.relayMessage(m.chat, msgs[text.toLowerCase()], {});
+        break;
+    }
+    // Kondisi lainnya
+    case 'listmsg': {
+        // Contoh handler untuk perintah lain
+        break;
+    }
+    default: {
+        // Kondisi default untuk input yang tidak dikenali
+        console.log(`Perintah '${budy}' tidak dikenali.`);
+        break;
+    }
+}
 		switch(command) {
 			// Tempat Add Case
 			case '19rujxl1e': {
 				console.log('.')
 			}
 			break
-			case 'arbot': {
+			case 'arbot':{
     if (!q) return m.reply('Masukkan teks untuk Ar-Bot!');
     
     try {
@@ -1266,11 +1264,31 @@ break;
 					}
 				})
 				let timestamp = speed()
-				let latensi = speed() - timestamp
-				neww = performance.now()
-				oldd = performance.now()
-				respon = `Kecepatan Respon ${latensi.toFixed(4)} _Second_ \n ${oldd - neww} _miliseconds_\n\nRuntime : ${runtime(process.uptime())}\n\n💻 Info Server\nRAM: ${formatp(os.totalmem() - os.freemem())} / ${formatp(os.totalmem())}\n\n_NodeJS Memory Usaage_\n${Object.keys(used).map((key, _, arr) => `${key.padEnd(Math.max(...arr.map(v=>v.length)),' ')}: ${formatp(used[key])}`).join('\n')}\n\n${cpus[0] ? `_Total CPU Usage_\n${cpus[0].model.trim()} (${cpu.speed} MHZ)\n${Object.keys(cpu.times).map(type => `- *${(type + '*').padEnd(6)}: ${(100 * cpu.times[type] / cpu.total).toFixed(2)}%`).join('\n')}\n_CPU Core(s) Usage (${cpus.length} Core CPU)_\n${cpus.map((cpu, i) => `${i + 1}. ${cpu.model.trim()} (${cpu.speed} MHZ)\n${Object.keys(cpu.times).map(type => `- *${(type + '*').padEnd(6)}: ${(100 * cpu.times[type] / cpu.total).toFixed(2)}%`).join('\n')}`).join('\n\n')}` : ''}`.trim()
-				m.reply(respon)
+				let latensi = speed() - timestamp;
+neww = performance.now();
+oldd = performance.now();
+respon = `
+💡 *Informasi Sistem*
+⚡ *Kecepatan Respon*: ${latensi.toFixed(4)} _detik_ 
+⏱️ *Waktu Eksekusi*: ${(oldd - neww).toFixed(4)} _milidetik_
+
+⏳ *Runtime*: ${runtime(process.uptime())}
+
+💻 *Info Server*
+RAM Digunakan: ${formatp(os.totalmem() - os.freemem())} / ${formatp(os.totalmem())}
+
+🛠️ *Penggunaan Memori NodeJS*
+${Object.keys(used).map((key, _, arr) => `${key.padEnd(Math.max(...arr.map(v => v.length)), ' ')}: ${formatp(used[key])}`).join('\n')}
+
+${cpus[0] ? `
+🖥️ *Penggunaan CPU*
+- Model: ${cpus[0].model.trim()} (${cpu.speed} MHz)
+- Total Penggunaan CPU:
+${Object.keys(cpu.times).map(type => `- ${type}: ${(100 * cpu.times[type] / cpu.total).toFixed(2)}%`).join('\n')}
+` : ''}
+`.trim();
+
+m.reply(respon);
 			}
 			break
 			case 'speedtest': case 'speed': {
@@ -1331,20 +1349,20 @@ break;
 				});
 			}
 			break
-			case 'addmsg': {
+			case 'addlist': {
 				if (!m.quoted) return m.reply('Reply Pesan Yang Ingin Disave Di Database')
 				if (!text) return m.reply(`Example : ${prefix + command} file name`)
 				let msgs = db.database
 				if (text.toLowerCase() in msgs) return m.reply(`'${text}' telah terdaftar di list pesan`)
 				msgs[text.toLowerCase()] = m.quoted
 				delete msgs[text.toLowerCase()].chat
-				m.reply(`Berhasil menambahkan pesan di list pesan sebagai '${text}'\nAkses dengan ${prefix}getmsg ${text}\nLihat list Pesan Dengan ${prefix}listmsg`)
+				m.reply(`Berhasil menambahkan pesan di list pesan sebagai '${text}'\nAkses dengan ${prefix}get ${text}\nLihat list Pesan Dengan ${prefix}listmsg`)
 			}
 			break
-			case 'delmsg': case 'deletemsg': {
+			case 'dellist': case 'deletemsg': {
 				if (!text) return m.reply('Nama msg yg mau di delete?')
 				let msgs = db.database
-				if (text == 'allmsg') {
+				if (text == 'all') {
 					db.database = {}
 					m.reply('Berhasil menghapus seluruh msg dari list pesan')
 				} else {
@@ -1354,14 +1372,14 @@ break;
 				}
 			}
 			break
-			case 'getmsg': {
+			case 'get': {
 				if (!text) return m.reply(`Example : ${prefix + command} file name\n\nLihat list pesan dengan ${prefix}listmsg`)
 				let msgs = db.database
 				if (!(text.toLowerCase() in msgs)) return m.reply(`'${text}' tidak terdaftar di list pesan`)
 				await naze.relayMessage(m.chat, msgs[text.toLowerCase()], {})
 			}
 			break
-			case 'listmsg': {
+			case 'list': {
 				let seplit = Object.entries(db.database).map(([nama, isi]) => { return { nama, message: getContentType(isi) }})
 				let teks = '「 LIST DATABASE 」\n\n'
 				for (let i of seplit) {
@@ -1500,26 +1518,32 @@ break;
 			}
 			break
 			case 'tourl': {
-				try {
-					let { fileIO, TelegraPh } = require('./lib/uploader')
-					if (/jpg|jpeg|png/.test(mime)) {
-						m.reply(mess.wait)
-						let media = await (m.quoted ? m.quoted.download() : m.download())
-						let anu = await TelegraPh(media)
-						m.reply('Url : ' + anu)
-					} else if (/webp|video|sticker|audio/.test(mime)) {
-						m.reply(mess.wait)
-						let media = await (m.quoted ? m.quoted.download() : m.download())
-						let anu = await UguuSe(media)
-						m.reply('Url : ' + anu.url)
-					} else {
-						m.reply('Send Media yg ingin di Upload!')
-					}
-				} catch (e) {
-					m.reply('Server Uploader sedang offline!')
-				}
-			}
-			break
+    try {
+        const { TelegraPh } = require('./lib/uploader'); // Impor fungsi dari uploader.js
+        
+        // Pastikan mime tipe media terdeteksi
+        if (!mime) return m.reply('Kirimkan media (gambar atau stiker) untuk diunggah!');
+        
+        // Cek tipe media (hanya gambar yang didukung Telegra.ph)
+        if (/image/.test(mime)) {
+            m.reply(mess.wait);
+            
+            // Unduh media
+            let media = await (m.quoted ? m.quoted.download() : m.download());
+            
+            // Unggah ke Telegra.ph
+            let url = await TelegraPh(media);
+            m.reply('Url: ' + url);
+        } else {
+            m.reply('Hanya gambar yang didukung untuk Telegra.ph.');
+        }
+    } catch (e) {
+        console.error(e);
+        m.reply('Terjadi kesalahan atau server Telegra.ph sedang offline.');
+    }
+}
+break;
+
 			case 'texttospech': case 'tts': case 'tospech': {
 				if (!text) return m.reply('Mana text yg mau diubah menjadi audio?')
 				let { tts } = require('./lib/tts')
@@ -1537,7 +1561,7 @@ break;
 					let teks = args[1] ? args.slice(1).join(' ') : m.quoted.text
 					try {
 						let hasil = await translate(teks, { to: lang, autoCorrect: true })
-						m.reply(`To : ${lang}\n${hasil[0]}`)
+						m.reply(`To : ${lang}\n> ${hasil[0]}`)
 					} catch (e) {
 						m.reply(`Lang *${lang}* Tidak Di temukan!\nSilahkan lihat list, ${prefix + command} list`)
 					}
@@ -1682,36 +1706,6 @@ break;
 					await naze.sendAsSticker(m.chat, Buffer.from(res.result.image, 'base64'), m, { packname: packname, author: author })
 				} catch (e) {
 					m.reply('Server Create Sedang Offline!')
-				}
-			}
-			break
-			case 'wasted': {
-				try {
-					if (/jpg|jpeg|png/.test(mime)) {
-						m.reply(mess.wait)
-						let media = await (m.quoted ? m.quoted.download() : m.download())
-						let anu = await TelegraPh(media)
-						await naze.sendFileUrl(m.chat, 'https://some-random-api.com/canvas/wasted?avatar=' + anu, 'Nih Bro', m)
-					} else {
-						m.reply('Send Media yg ingin di Upload!')
-					}
-				} catch (e) {
-					m.reply('Server Canvas Sedang Offline!')
-				}
-			}
-			break
-			case 'trigger': case 'triggered': {
-				try {
-					if (/jpg|jpeg|png/.test(mime)) {
-						m.reply(mess.wait)
-						let media = await (m.quoted ? m.quoted.download() : m.download())
-						let anu = await TelegraPh(media)
-						await naze.sendMessage(m.chat, { document: { url: 'https://some-random-api.com/canvas/triggered?avatar=' + anu }, fileName: 'triggered.gif', mimetype: 'image/gif' }, { quoted: m })
-					} else {
-						m.reply('Send Media yg ingin di Upload!')
-					}
-				} catch (e) {
-					m.reply('Server Canvas Sedang Offline!')
 				}
 			}
 			break
@@ -1880,37 +1874,6 @@ break;
 			}
 			break
 			
-			// Ai Menu
-			case 'ai': {
-				if (!text) return m.reply(`Example: ${prefix + command} query`)
-				try {
-					const hasil = await chatGpt(text);
-					m.reply(hasil)
-				} catch (e) {
-					m.reply(pickRandom(['Fitur Ai sedang bermasalah!','Tidak dapat terhubung ke ai!','Sistem Ai sedang sibuk sekarang!','Fitur sedang tidak dapat digunakan!']))
-				}
-			}
-			break
-			case 'simi': {
-				if (!text) return m.reply(`Example: ${prefix + command} query`)
-				try {
-					const hasil = await simi(text)
-					m.reply(hasil.success)
-				} catch (e) {
-					m.reply('Server simi sedang offline!')
-				}
-			}
-			break
-			case 'txt2img': case 'texttoimage': {
-				if (!text) return m.reply(`Example: ${prefix + command} anime, HD`)
-				try {
-					await naze.sendFileUrl(m.chat, `https://widipe.com/ai/text2img?text=${encodeURIComponent(text)}`, 'Done', m)
-				} catch (e) {
-					m.reply('Gagal Create Gambar!')
-				}
-			}
-			break
-			
 			// Search Menu
 			case 'google': {
 				if (!text) return m.reply(`Example: ${prefix + command} query`)
@@ -2018,68 +1981,136 @@ break;
 			break
 			
 			// Downloader Menu
-			case 'ytmp3': case 'ytaudio': case 'ytplayaudio': {
-				if (!text) return m.reply(`Example: ${prefix + command} url_youtube`)
-				if (!text.includes('youtu')) return m.reply('Url Tidak Mengandung Result Dari Youtube!')
-				m.reply(mess.wait)
-				try {
-					const hasil = await ytMp3(text);
-					await naze.sendMessage(m.chat, {
-						audio: { url: hasil.result },
-						mimetype: 'audio/mpeg',
-						contextInfo: {
-							externalAdReply: {
-								title: hasil.title,
-								body: hasil.channel,
-								previewType: 'PHOTO',
-								thumbnailUrl: hasil.thumb,
-								mediaType: 1,
-								renderLargerThumbnail: true,
-								sourceUrl: text
-							}
-						}
-					}, { quoted: m });
-				} catch (e) {
-					try {
-						const anu = new Ytdl()
-						const hasil = await anu.play(text);
-						const hasil_url = Object.values(hasil.audio).find(v => v.size === '128kbps')?.url || Object.values(hasil.audio)[0]?.url
-						await naze.sendMessage(m.chat, { audio: { url: hasil_url }, mimetype: 'audio/mpeg' }, { quoted: m });
-					} catch (e) {
-						try {
-							const hasil = await allDl(text, { isAudioOnly: true })
-							await naze.sendMessage(m.chat, { audio: { url: hasil.url }, mimetype: 'audio/mpeg' }, { quoted: m });
-						} catch (e) {
-							m.reply('Gagal Mendownload Audio!')
-						}
-					}
-				}
-			}
-			break
+			case 'ytmp3': {
+    if (!text) return m.reply(`Example: ${prefix + command} url_youtube`);
+    if (!text.includes('youtu')) return m.reply('URL tidak valid! Pastikan URL dari YouTube.');
+    
+    m.reply(mess.wait);
+    try {
+        // Metode pertama: menggunakan fungsi ytMp3
+        const hasil = await ytMp3(text);
+        if (hasil && hasil.result) {
+            await naze.sendMessage(
+                m.chat,
+                {
+                    document: { url: hasil.result },
+                    mimetype: 'audio/mpeg',
+                    fileName: `${hasil.title}.mp3`,
+                    caption: `*📍Title:* ${hasil.title}\n*🗓Uploaded on:* ${hasil.uploadDate}\n*🚀Channel:* ${hasil.channel}\n*👁️Views:* ${hasil.views}`,
+                },
+                { quoted: m }
+            );
+        } else {
+            throw new Error('ytMp3 gagal mengembalikan hasil.');
+        }
+    } catch (e1) {
+        console.error('Error ytMp3:', e1);
+        try {
+            // Metode fallback: menggunakan Ytdl
+            const anu = new Ytdl();
+            const hasil = await anu.play(text);
+            const audio_url = Object.values(hasil.audio).find((a) => a.size === 'auto')?.url || Object.values(hasil.audio)[0]?.url;
+
+            if (audio_url) {
+                await naze.sendMessage(
+                    m.chat,
+                    {
+                        document: { url: audio_url },
+                        mimetype: 'audio/mpeg',
+                        fileName: `${hasil.title}.mp3`,
+                        caption: 'Audio berhasil diunduh melalui metode Ytdl.',
+                    },
+                    { quoted: m }
+                );
+            } else {
+                throw new Error('Ytdl gagal mengembalikan URL audio.');
+            }
+        } catch (e2) {
+            console.error('Error Ytdl:', e2);
+            try {
+                // Metode fallback kedua: menggunakan allDl
+                const hasil = await allDl(text);
+                if (hasil && hasil.url) {
+                    await naze.sendMessage(
+                        m.chat,
+                        {
+                            document: { url: hasil.url },
+                            mimetype: 'audio/mpeg',
+                            fileName: 'audio.mp3',
+                            caption: 'Audio berhasil diunduh melalui metode allDl.',
+                        },
+                        { quoted: m }
+                    );
+                } else {
+                    throw new Error('allDl gagal mengembalikan hasil.');
+                }
+            } catch (e3) {
+                console.error('Error allDl:', e3);
+                m.reply('Gagal mendownload audio!');
+            }
+        }
+    }
+    break;
+}
 			case 'ytmp4': case 'ytvideo': case 'ytplayvideo': {
-				if (!text) return m.reply(`Example: ${prefix + command} url_youtube`)
-				if (!text.includes('youtu')) return m.reply('Url Tidak Mengandung Result Dari Youtube!')
-				m.reply(mess.wait)
-				try {
-					const hasil = await ytMp4(text);
-					await naze.sendMessage(m.chat, { video: { url: hasil.result }, caption: `*📍Title:* ${hasil.title}\n*✏Description:* ${hasil.desc ? hasil.desc : ''}\n*🚀Channel:* ${hasil.channel}\n*🗓Upload at:* ${hasil.uploadDate}` }, { quoted: m });
-				} catch (e) {
-					try {
-						const anu = new Ytdl()
-						const hasil = await anu.play(text);
-						const hasil_url = Object.values(hasil.video).find(v => v.size === 'auto')?.url || Object.values(hasil.video)[0]?.url
-						await naze.sendMessage(m.chat, { video: { url: hasil_url }}, { quoted: m });
-					} catch (e) {
-						try {
-							const hasil = await allDl(text)
-							await naze.sendMessage(m.chat, { video: { url: hasil.url }}, { quoted: m });
-						} catch (e) {
-							m.reply('Gagal Mendownload Video!')
-						}
-					}
-				}
-			}
-			break
+    if (!text) return m.reply(`Example: ${prefix + command} url_youtube`);
+    if (!text.includes('youtu')) return m.reply('URL tidak valid! Pastikan mengandung YouTube.');
+
+    m.reply(mess.wait);
+    try {
+        // Metode pertama: menggunakan ytMp4
+        const hasil = await ytMp4(text);
+        if (hasil && hasil.result) {
+            await naze.sendMessage(
+                m.chat,
+                {
+                    video: { url: hasil.result },
+                    caption: `*📍Title:* ${hasil.title}\n*✏Description:* ${hasil.desc || 'No description'}\n*🚀Channel:* ${hasil.channel}\n*🗓Upload at:* ${hasil.uploadDate}`,
+                },
+                { quoted: m }
+            );
+        } else {
+            throw new Error('ytMp4 gagal mengembalikan hasil.');
+        }
+    } catch (e1) {
+        console.error('Error ytMp4:', e1);
+        try {
+            // Metode kedua: menggunakan Ytdl
+            const anu = new Ytdl();
+            const hasil = await anu.play(text);
+            const hasil_url = Object.values(hasil.video).find((v) => v.size === 'auto')?.url || Object.values(hasil.video)[0]?.url;
+
+            if (hasil_url) {
+                await naze.sendMessage(
+                    m.chat,
+                    { video: { url: hasil_url }, caption: 'Video berhasil diunduh melalui metode Ytdl.' },
+                    { quoted: m }
+                );
+            } else {
+                throw new Error('Ytdl gagal mengembalikan URL video.');
+            }
+        } catch (e2) {
+            console.error('Error Ytdl:', e2);
+            try {
+                // Metode ketiga: menggunakan allDl
+                const hasil = await allDl(text);
+                if (hasil && hasil.url) {
+                    await naze.sendMessage(
+                        m.chat,
+                        { video: { url: hasil.url }, caption: 'Video berhasil diunduh melalui metode allDl.' },
+                        { quoted: m }
+                    );
+                } else {
+                    throw new Error('allDl gagal mengembalikan hasil.');
+                }
+            } catch (e3) {
+                console.error('Error allDl:', e3);
+                m.reply('Gagal mendownload video!');
+            }
+        }
+    }
+    break;
+}
 			case 'ig': case 'instagram': case 'instadl': case 'igdown': case 'igdl': {
 				if (!text) return m.reply(`Example: ${prefix + command} url_instagram`)
 				if (!text.includes('instagram.com')) return m.reply('Url Tidak Mengandung Result Dari Instagram!')
@@ -2213,109 +2244,10 @@ break;
 				});
 			}
 			break
-			
-			// Random Menu
-			case 'randomcolor': case 'color': case 'warnarandom': case 'warna': {
-				m.reply(mess.wait)
-				let anu = await fetchJson(`https://api.popcat.xyz/randomcolor`)
-				await naze.sendFileUrl(m.chat, anu.image, `*Nama Warna : ${anu.name}*\n*Code : ${anu.hex}*`, m)
-			}
-			break
-			case 'coffe': case 'kopi': {
-				await naze.sendFileUrl(m.chat, 'https://coffee.alexflipnote.dev/random', '☕ Random Coffe', m)
-			}
-			break
-			
-			// Anime Menu
-			case 'waifu': {
-				if (text == 'nsfw') {
-					const res = await fetchJson('https://api.waifu.pics/nsfw/waifu')
-					await naze.sendFileUrl(m.chat, res.url, 'Random Waifu', m)
-				} else {
-					const res = await fetchJson('https://api.waifu.pics/sfw/waifu')
-					await naze.sendFileUrl(m.chat, res.url, 'Random Waifu', m)
-				}
-			}
-			break
-			case 'neko': {
-				if (text == 'nsfw') {
-					const res = await fetchJson('https://api.waifu.pics/nsfw/neko')
-					await naze.sendFileUrl(m.chat, res.url, 'Random Waifu', m)
-				} else {
-					const res = await fetchJson('https://api.waifu.pics/sfw/neko')
-					await naze.sendFileUrl(m.chat, res.url, 'Random Neko', m)
-				}
-			}
-			break
-			
-			// Fun Menu
-			case 'dadu': {
-				let ddsa = [{ url: 'https://telegra.ph/file/9f60e4cdbeb79fc6aff7a.png', no: 1 },{ url: 'https://telegra.ph/file/797f86e444755282374ef.png', no: 2 },{ url: 'https://telegra.ph/file/970d2a7656ada7c579b69.png', no: 3 },{ url: 'https://telegra.ph/file/0470d295e00ebe789fb4d.png', no: 4 },{ url: 'https://telegra.ph/file/a9d7332e7ba1d1d26a2be.png', no: 5 },{ url: 'https://telegra.ph/file/99dcd999991a79f9ba0c0.png', no: 6 }]
-				let media = pickRandom(ddsa)
-				await naze.sendAsSticker(m.chat, media.url, m, { packname: packname, author: author, isAvatar: 1 })
-			}
-			break
-			case 'halah': case 'hilih': case 'huluh': case 'heleh': case 'holoh': {
-				if (!m.quoted && !text) return m.reply(`Kirim/reply text dengan caption ${prefix + command}`)
-				ter = command[1].toLowerCase()
-				tex = m.quoted ? m.quoted.text ? m.quoted.text : q ? q : m.text : q ? q : m.text
-				m.reply(tex.replace(/[aiueo]/g, ter).replace(/[AIUEO]/g, ter.toUpperCase()))
-			}
-			break
-			case 'bisakah': {
-				if (!text) return m.reply(`Example : ${prefix + command} saya menang?`)
-				let bisa = ['Bisa','Coba Saja','Pasti Bisa','Mungkin Saja','Tidak Bisa','Tidak Mungkin','Coba Ulangi','Ngimpi kah?','yakin bisa?']
-				let keh = bisa[Math.floor(Math.random() * bisa.length)]
-				m.reply(`*Bisakah ${text}*\nJawab : ${keh}`)
-			}
-			break
-			case 'apakah': {
-				if (!text) return m.reply(`Example : ${prefix + command} saya bisa menang?`)
-				let apa = ['Iya','Tidak','Bisa Jadi','Coba Ulangi','Mungkin Saja','Mungkin Tidak','Mungkin Iya','Ntahlah']
-				let kah = apa[Math.floor(Math.random() * apa.length)]
-				m.reply(`*${command} ${text}*\nJawab : ${kah}`)
-			}
-			break
-			case 'kapan': case 'kapankah': {
-				if (!text) return m.reply(`Example : ${prefix + command} saya menang?`)
-				let kapan = ['Besok','Lusa','Nanti','4 Hari Lagi','5 Hari Lagi','6 Hari Lagi','1 Minggu Lagi','2 Minggu Lagi','3 Minggu Lagi','1 Bulan Lagi','2 Bulan Lagi','3 Bulan Lagi','4 Bulan Lagi','5 Bulan Lagi','6 Bulan Lagi','1 Tahun Lagi','2 Tahun Lagi','3 Tahun Lagi','4 Tahun Lagi','5 Tahun Lagi','6 Tahun Lagi','1 Abad lagi','3 Hari Lagi','Bulan Depan','Ntahlah','Tidak Akan Pernah']
-				let koh = kapan[Math.floor(Math.random() * kapan.length)]
-				m.reply(`*${command} ${text}*\nJawab : ${koh}`)
-			}
-			break
-			case 'tanyakerang': case 'kerangajaib': case 'kerang': {
-				if (!text) return m.reply(`Example : ${prefix + command} boleh pinjam 100?`)
-				let krng = ['Mungkin suatu hari', 'Tidak juga', 'Tidak keduanya', 'Kurasa tidak', 'Ya', 'Tidak', 'Coba tanya lagi', 'Tidak ada']
-				let jwb = pickRandom(krng)
-				m.reply(`*Pertanyaan : ${text}*\n*Jawab : ${jwb}*`)
-			}
-			break
-			case 'cekmati': {
-				if (!text) return m.reply(`Example : ${prefix + command} nama lu`)
-				let teksnya = text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').replace(/\d/g, '');
-				let { data } = await axios.get(`https://api.agify.io/?name=${teksnya ? teksnya : 'bot'}`);
-				let jawab = (`Nama : ${text}\n*Mati Pada Umur :* ${data.age == null ? (Math.floor(Math.random() * 90) + 20) : data.age} Tahun.\n\n_Cepet Cepet Tobat Bro_\n_Soalnya Mati ga ada yang tau_`)
-				m.reply(jawab)
-			}
-			break
-			case 'ceksifat': {
-				let sifat_a = ['Bijak','Sabar','Kreatif','Humoris','Mudah bergaul','Mandiri','Setia','Jujur','Dermawan','Idealis','Adil','Sopan','Tekun','Rajin','Pemaaf','Murah hati','Ceria','Percaya diri','Penyayang','Disiplin','Optimis','Berani','Bersyukur','Bertanggung jawab','Bisa diandalkan','Tenang','Kalem','Logis']
-				let sifat_b = ['Sombong','Minder','Pendendam','Sensitif','Perfeksionis','Caper','Pelit','Egois','Pesimis','Penyendiri','Manipulatif','Labil','Penakut','Vulgar','Tidak setia','Pemalas','Kasar','Rumit','Boros','Keras kepala','Tidak bijak','Pembelot','Serakah','Tamak','Penggosip','Rasis','Ceroboh','Intoleran']
-				let teks = `╭──❍「 *Cek Sifat* 」❍\n│• Sifat ${text && m.mentionedJid ? text : '@' + m.sender.split('@')[0]}${(text && m.mentionedJid ? '' : (`\n│• Nama : *${text ? text : m.pushName}*` || '\n│• Nama : *Tanpa Nama*'))}\n│• Orang yang : *${pickRandom(sifat_a)}*\n│• Kekurangan : *${pickRandom(sifat_b)}*\n│• Keberanian : *${Math.floor(Math.random() * 100)}%*\n│• Kepedulian : *${Math.floor(Math.random() * 100)}%*\n│• Kecemasan : *${Math.floor(Math.random() * 100)}%*\n│• Ketakutan : *${Math.floor(Math.random() * 100)}%*\n│• Akhlak Baik : *${Math.floor(Math.random() * 100)}%*\n│• Akhlak Buruk : *${Math.floor(Math.random() * 100)}%*\n╰──────❍`
-				m.reply(teks)
-			}
-			break
 			case 'cekkhodam': {
 				if (!text) return m.reply(`Example : ${prefix + command} nama lu`)
 				let anu = await cekKhodam(text)
 				m.reply(`Khodam dari *${text}* adalah *${anu}*`)
-			}
-			break
-			case 'jodohku': {
-				if (!m.isGroup) return m.reply(mess.group)
-				let member = (store.groupMetadata[m.chat].participants || m.metadata.participants).map(a => a.id)
-				let jodoh = pickRandom(member)
-				m.reply(`👫Jodoh mu adalah\n@${m.sender.split('@')[0]} ❤ @${jodoh.split('@')[0]}`);
 			}
 			break
 			case 'fitnah': {
@@ -2323,115 +2255,6 @@ break;
 				if (!teks1 || !teks2 || !teks3) return m.reply(`Example : ${prefix + command} pesan target|pesan mu|nomer/tag target`)
 				let ftelo = { key: { fromMe: false, participant: teks3.replace(/[^0-9]/g, '') + '@s.whatsapp.net', ...(m.isGroup ? { remoteJid: m.chat } : { remoteJid: teks3.replace(/[^0-9]/g, '') + '@s.whatsapp.net'})}, message: { conversation: teks1 }}
 				naze.sendMessage(m.chat, { text: teks2 }, { quoted: ftelo });
-			}
-			break
-			
-			// Game Menu
-			case 'slot': {
-				await gameSlot(naze, m, db)
-			}
-			break
-			case 'casino': {
-				await gameCasinoSolo(naze, m, prefix, db)
-			}
-			break
-			case 'rampok': case 'merampok': {
-				await gameMerampok(m, db)
-			}
-			break
-			case 'begal': {
-				await gameBegal(naze, m, db)
-			}
-			break
-			case 'suitpvp': case 'suit': {
-				let poin = 10
-				let poin_lose = 10
-				let timeout = 60000
-				if (Object.values(suit).find(roof => roof.id.startsWith('suit') && [roof.p, roof.p2].includes(m.sender))) m.reply(`Selesaikan suit mu yang sebelumnya`)
-				if (m.mentionedJid[0] === m.sender) return m.reply(`Tidak bisa bermain dengan diri sendiri !`)
-				if (!m.mentionedJid[0]) return m.reply(`_Siapa yang ingin kamu tantang?_\nTag orangnya..\n\nContoh : ${prefix}suit @${owner[0]}`, m.chat, { mentions: [owner[1] + '@s.whatsapp.net'] })
-				if (Object.values(suit).find(roof => roof.id.startsWith('suit') && [roof.p, roof.p2].includes(m.mentionedJid[0]))) return m.reply(`Orang yang kamu tantang sedang bermain suit bersama orang lain :(`)
-				let id = 'suit_' + new Date() * 1
-				let caption = `_*SUIT PvP*_\n\n@${m.sender.split`@`[0]} menantang @${m.mentionedJid[0].split`@`[0]} untuk bermain suit\n\nSilahkan @${m.mentionedJid[0].split`@`[0]} untuk ketik terima/tolak`
-				suit[id] = {
-					chat: m.reply(caption),
-					id: id,
-					p: m.sender,
-					p2: m.mentionedJid[0],
-					status: 'wait',
-					waktu: setTimeout(() => {
-						if (suit[id]) m.reply(`_Waktu suit habis_`)
-						delete suit[id]
-					}, 60000), poin, poin_lose, timeout
-				}
-			}
-			break
-			case 'ttc': case 'ttt': case 'tictactoe': {
-				let TicTacToe = require('./lib/tictactoe');
-				if (Object.values(tictactoe).find(room => room.id.startsWith('tictactoe') && [room.game.playerX, room.game.playerO].includes(m.sender))) return m.reply(`Kamu masih didalam game!\nKetik *${prefix}del${command}* Jika Ingin Mengakhiri sesi`);
-				let room = Object.values(tictactoe).find(room => room.state === 'WAITING' && (text ? room.name === text : true))
-				if (room) {
-					m.reply('Partner ditemukan!')
-					room.o = m.chat
-					room.game.playerO = m.sender
-					room.state = 'PLAYING'
-					let arr = room.game.render().map(v => {
-						return {X: '❌',O: '⭕',1: '1️⃣',2: '2️⃣',3: '3️⃣',4: '4️⃣',5: '5️⃣',6: '6️⃣',7: '7️⃣',8: '8️⃣',9: '9️⃣'}[v]
-					})
-					let str = `Room ID: ${room.id}\n\n${arr.slice(0, 3).join('')}\n${arr.slice(3, 6).join('')}\n${arr.slice(6).join('')}\n\nMenunggu @${room.game.currentTurn.split('@')[0]}\n\nKetik *nyerah* untuk menyerah dan mengakui kekalahan`
-					if (room.x !== room.o) await naze.sendMessage(room.x, { texr: str, mentions: parseMention(str) }, { quoted: m })
-					await naze.sendMessage(room.o, { text: str, mentions: parseMention(str) }, { quoted: m })
-				} else {
-					room = {
-						id: 'tictactoe-' + (+new Date),
-						x: m.chat,
-						o: '',
-						game: new TicTacToe(m.sender, 'o'),
-						state: 'WAITING',
-						waktu: setTimeout(() => {
-							if (tictactoe[roomnya.id]) m.reply(`_Waktu ${command} habis_`)
-							delete tictactoe[roomnya.id]
-						}, 300000)
-					}
-					if (text) room.name = text
-					naze.sendMessage(m.chat, { text: 'Menunggu partner' + (text ? ` mengetik command dibawah ini ${prefix}${command} ${text}` : ''), mentions: m.mentionedJid }, { quoted: m })
-					tictactoe[room.id] = room
-				}
-			}
-			break
-			case 'tebakbom': {
-				if (tebakbom[m.sender]) return m.reply('Masih Ada Sesi Yang Belum Diselesaikan!')
-				function shuffle(array) {
-					return array.sort(() => Math.random() - 0.5);
-				}
-				tebakbom[m.sender] = {
-					petak: shuffle([0, 0, 0, 2, 0, 2, 0, 2, 0, 0]),
-					board: ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'],
-					bomb: 3,
-					lolos: 7,
-					pick: 0,
-					nyawa: ['❤️', '❤️', '❤️'],
-					waktu: setTimeout(() => {
-						if (tebakbom[m.sender]) m.reply(`_Waktu ${command} habis_`)
-						delete tebakbom[m.sender];
-					}, 120000)
-				}
-				m.reply(`*TEBAK BOM*\n\n${tebakbom[m.sender].board.join("")}\n\nPilih lah nomor tersebut! dan jangan sampai terkena Bom!\nBomb : ${tebakbom[m.sender].bomb}\nNyawa : ${tebakbom[m.sender].nyawa.join("")}`);
-			}
-			break
-			case 'tekateki': {
-				if (iGame(tekateki, m.chat)) return m.reply('Masih Ada Sesi Yang Belum Diselesaikan!')
-				const hasil = pickRandom(JSON.parse(fs.readFileSync('./database/games/tekateki.json')));
-				let { key } = await m.reply(`🎮 Teka Teki Berikut :\n\n${hasil.soal}\n\nWaktu : 60s\nHadiah *+3499*`)
-				tekateki[m.chat + key.id] = {
-					jawaban: hasil.jawaban.toLowerCase(),
-					id: key.id
-				}
-				await sleep(60000)
-				if (rdGame(tekateki, m.chat, key.id)) {
-					m.reply('Waktu Habis\nJawaban: ' + tekateki[m.chat + key.id].jawaban)
-					delete tekateki[m.chat + key.id]
-				}
 			}
 			break
 			case 'tebaklirik': {
@@ -2449,162 +2272,17 @@ break;
 				}
 			}
 			break
-			case 'tebaklagu': {
-			}
-			break
-			case 'tebakkata': {
-				if (iGame(tebakkata, m.chat)) return m.reply('Masih Ada Sesi Yang Belum Diselesaikan!')
-				const hasil = pickRandom(JSON.parse(fs.readFileSync('./database/games/tebakkata.json')));
-				let { key } = await m.reply(`🎮 Tebak Kata Berikut :\n\n${hasil.soal}\n\nWaktu : 60s\nHadiah *+3499*`)
-				tebakkata[m.chat + key.id] = {
-					jawaban: hasil.jawaban.toLowerCase(),
-					id: key.id
-				}
-				await sleep(60000)
-				if (rdGame(tebakkata, m.chat, key.id)) {
-					m.reply('Waktu Habis\nJawaban: ' + tebakkata[m.chat + key.id].jawaban)
-					delete tebakkata[m.chat + key.id]
-				}
-			}
-			break
-			case 'family100': {
-				if (family100.hasOwnProperty(m.chat)) return m.reply('Masih Ada Sesi Yang Belum Diselesaikan!')
-				const hasil = pickRandom(JSON.parse(fs.readFileSync('./database/games/family100.json')));
-				let { key } = await m.reply(`🎮 Tebak Kata Berikut :\n\n${hasil.soal}\n\nWaktu : 5m\nHadiah *+3499*`)
-				family100[m.chat] = {
-					soal: hasil.soal,
-					jawaban: hasil.jawaban,
-					terjawab: Array.from(hasil.jawaban, () => false),
-					id: key.id
-				}
-				await sleep(300000)
-				if (family100.hasOwnProperty(m.chat)) {
-					m.reply('Waktu Habis\nJawaban:\n- ' + family100[m.chat].jawaban.join('\n- '))
-					delete family100[m.chat]
-				}
-			}
-			break
-			case 'susunkata': {
-				if (iGame(susunkata, m.chat)) return m.reply('Masih Ada Sesi Yang Belum Diselesaikan!')
-				const hasil = pickRandom(JSON.parse(fs.readFileSync('./database/games/susunkata.json')));
-				let { key } = await m.reply(`🎮 Susun Kata Berikut :\n\n${hasil.soal}\nTipe : ${hasil.tipe}\n\nWaktu : 60s\nHadiah *+2989*`)
-				susunkata[m.chat + key.id] = {
-					jawaban: hasil.jawaban.toLowerCase(),
-					id: key.id
-				}
-				await sleep(60000)
-				if (rdGame(susunkata, m.chat, key.id)) {
-					m.reply('Waktu Habis\nJawaban: ' + susunkata[m.chat + key.id].jawaban)
-					delete susunkata[m.chat + key.id]
-				}
-			}
-			break
-			case 'tebakkimia': {
-				if (iGame(tebakkimia, m.chat)) return m.reply('Masih Ada Sesi Yang Belum Diselesaikan!')
-				const hasil = pickRandom(JSON.parse(fs.readFileSync('./database/games/tebakkimia.json')));
-				let { key } = await m.reply(`🎮 Tebak Kimia Berikut :\n\n${hasil.unsur}\n\nWaktu : 60s\nHadiah *+3499*`)
-				tebakkimia[m.chat + key.id] = {
-					jawaban: hasil.lambang.toLowerCase(),
-					id: key.id
-				}
-				await sleep(60000)
-				if (rdGame(tebakkimia, m.chat, key.id)) {
-					m.reply('Waktu Habis\nJawaban: ' + tebakkimia[m.chat + key.id].jawaban)
-					delete tebakkimia[m.chat + key.id]
-				}
-			}
-			break
-			case 'caklontong': {
-				if (iGame(caklontong, m.chat)) return m.reply('Masih Ada Sesi Yang Belum Diselesaikan!')
-				const hasil = pickRandom(JSON.parse(fs.readFileSync('./database/games/caklontong.json')));
-				let { key } = await m.reply(`🎮 Jawab Pertanyaan Berikut :\n\n${hasil.soal}\n\nWaktu : 60s\nHadiah *+9999*`)
-				caklontong[m.chat + key.id] = {
-					...hasil,
-					jawaban: hasil.jawaban.toLowerCase(),
-					id: key.id
-				}
-				await sleep(60000)
-				if (rdGame(caklontong, m.chat, key.id)) {
-					m.reply(`Waktu Habis\nJawaban: ${caklontong[m.chat + key.id].jawaban}\n"${caklontong[m.chat + key.id].deskripsi}"`)
-					delete caklontong[m.chat + key.id]
-				}
-			}
-			break
-			case 'tebaknegara': {
-				if (iGame(tebaknegara, m.chat)) return m.reply('Masih Ada Sesi Yang Belum Diselesaikan!')
-				const hasil = pickRandom(JSON.parse(fs.readFileSync('./database/games/tebaknegara.json')));
-				let { key } = await m.reply(`🎮 Tebak Negara Dari Tempat Berikut :\n\n*Tempat : ${hasil.tempat}*\n\nWaktu : 60s\nHadiah *+3499*`)
-				tebaknegara[m.chat + key.id] = {
-					jawaban: hasil.negara.toLowerCase(),
-					id: key.id
-				}
-				await sleep(60000)
-				if (rdGame(tebaknegara, m.chat, key.id)) {
-					m.reply('Waktu Habis\nJawaban: ' + tebaknegara[m.chat + key.id].jawaban)
-					delete tebaknegara[m.chat + key.id]
-				}
-			}
-			break
-			case 'tebakgambar': {
-				if (iGame(tebakgambar, m.chat)) return m.reply('Masih Ada Sesi Yang Belum Diselesaikan!')
-				const hasil = pickRandom(JSON.parse(fs.readFileSync('./database/games/tebakgambar.json')));
-				let { key } = await naze.sendFileUrl(m.chat, hasil.img, `🎮 Tebak Gambar Berikut :\n\n${hasil.deskripsi}\n\nWaktu : 60s\nHadiah *+3499*`, m)
-				tebakgambar[m.chat + key.id] = {
-					jawaban: hasil.jawaban.toLowerCase(),
-					id: key.id
-				}
-				await sleep(60000)
-				if (rdGame(tebakgambar, m.chat, key.id)) {
-					m.reply('Waktu Habis\nJawaban: ' + tebakgambar[m.chat + key.id].jawaban)
-					delete tebakgambar[m.chat + key.id]
-				}
-			}
-			break
-			case 'tebakbendera': {
-				if (iGame(tebakbendera, m.chat)) return m.reply('Masih Ada Sesi Yang Belum Diselesaikan!')
-				const hasil = pickRandom(JSON.parse(fs.readFileSync('./database/games/tebakbendera.json')));
-				let { key } = await m.reply(`🎮 Tebak Bendera Berikut :\n\n*Bendera : ${hasil.bendera}*\n\nWaktu : 60s\nHadiah *+3499*`)
-				tebakbendera[m.chat + key.id] = {
-					jawaban: hasil.negara.toLowerCase(),
-					id: key.id
-				}
-				await sleep(60000)
-				if (rdGame(tebakbendera, m.chat, key.id)) {
-					m.reply('Waktu Habis\nJawaban: ' + tebakbendera[m.chat + key.id].jawaban)
-					delete tebakbendera[m.chat + key.id]
-				}
-			}
-			break
-			case 'kuismath': case 'math': {
-				const { genMath, modes } = require('./lib/math');
-				const inputMode = ['noob', 'easy', 'medium', 'hard','extreme','impossible','impossible2'];
-				if (iGame(kuismath, m.chat)) return m.reply('Masih Ada Sesi Yang Belum Diselesaikan!')
-				if (!text) return m.reply(`Mode: ${Object.keys(modes).join(' | ')}\nContoh penggunaan: ${prefix}math medium`)
-				if (!inputMode.includes(text.toLowerCase())) return m.reply('Mode tidak ditemukan!')
-				let result = await genMath(text.toLowerCase())
-				let { key } = await m.reply(`*Berapa hasil dari: ${result.soal.toLowerCase()}*?\n\nWaktu : ${(result.waktu / 1000).toFixed(2)} detik`)
-				kuismath[m.chat + key.id] = {
-					jawaban: result.jawaban,
-					mode: text.toLowerCase(),
-					id: key.id
-				}
-				await sleep(kuismath, result.waktu)
-				if (rdGame(m.chat + key.id)) {
-					m.reply('Waktu Habis\nJawaban: ' + kuismath[m.chat + key.id].jawaban)
-					delete kuismath[m.chat + key.id]
-				}
-			}
-			break
 			
 			// Menu
 			case 'allmenu': case 'menu': {
-				let profile
-				try {
-					profile = await naze.profilePictureUrl(m.sender, 'image');
-				} catch (e) {
-					profile = fake.anonim
-				}
-				const menunya = `
+    let profile;
+    try {
+        profile = await naze.profilePictureUrl(m.sender, 'image');
+    } catch (e) {
+        profile = fake.anonim; // Pastikan ini disesuaikan jika fake.anonim tidak digunakan lagi
+    }
+    
+    const menunya = `
 ╭──❍「 *USER INFO* 」❍
 ├ *Nama* : ${m.pushName ? m.pushName : 'Tanpa Nama'}
 ├ *Id* : @${m.sender.split('@')[0]}
@@ -2638,18 +2316,7 @@ break;
 │${setv} ${prefix}cuaca (kota)
 ╰─┬────❍
 ╭─┴❍「 *DOWNLOAD* 」❍
-│${setv} ${prefix}ytmp3 (url)
-│${setv} ${prefix}ytmp4 (url)
-│${setv} ${prefix}instagram (url)
 │${setv} ${prefix}tiktok (url)
-│${setv} ${prefix}facebook (url)
-│${setv} ${prefix}mediafire (url)
-╰─┬────❍
-╭─┴❍「 *QUOTES* 」❍
-│${setv} ${prefix}motivasi
-│${setv} ${prefix}quotes
-│${setv} ${prefix}truth
-│${setv} ${prefix}renungan
 ╰─┬────❍
 ╭─┴❍「 *TOOLS* 」❍
 │${setv} ${prefix}get (url)
@@ -2663,72 +2330,34 @@ break;
 │${setv} ${prefix}gitclone (urlnya)
 ╰─┬────❍
 ╭─┴❍「 *AI* 」❍
-│${setv} ${prefix}simi (query)
-│${setv} ${prefix}txt2img (query)
-╰─┬────❍
-╭─┴❍「 *ANIME* 」❍
-│${setv} ${prefix}waifu
-│${setv} ${prefix}neko
-╰─┬────❍
-╭─┴❍「 *GAME* 」❍
-│${setv} ${prefix}tictactoe
-│${setv} ${prefix}math (level)
-│${setv} ${prefix}tekateki
-│${setv} ${prefix}tebaklirik
-│${setv} ${prefix}tebakkata
-│${setv} ${prefix}tebakbom
-│${setv} ${prefix}susunkata
-│${setv} ${prefix}tebakkimia
-│${setv} ${prefix}tebaknegara
-│${setv} ${prefix}tebakgambar
-│${setv} ${prefix}tebakbendera
+│${setv} ${prefix}arbot (query)
 ╰─┬────❍
 ╭─┴❍「 *FUN* 」❍
-│${setv} ${prefix}dadu
-│${setv} ${prefix}bisakah (text)
-│${setv} ${prefix}apakah (text)
-│${setv} ${prefix}kapan (text)
-│${setv} ${prefix}kerangajaib (text)
-│${setv} ${prefix}cekmati (nama lu)
 │${setv} ${prefix}cekkhodam (nama lu)
-│${setv} ${prefix}rate (reply pesan)
-╰─┬────❍
-╭─┴❍「 *RANDOM* 」❍
-│${setv} ${prefix}randomcolor
-│${setv} ${prefix}coffe
-╰──────❍`
-				await naze.sendMessage(m.chat, {
-					document: fake.docs,
-					fileName: ucapanWaktu,
-					fileLength: '100000000000000',
-					pageCount: '999',
-					/* mimetype: pickRandom(fake.listfakedocs), */
-					caption: menunya,
-					
-					contextInfo: {
-						mentionedJid: [m.sender, '0@s.whatsapp.net', owner[0] + '@s.whatsapp.net'],
-						forwardingScore: 10,
-						isForwarded: true,
-						forwardedNewsletterMessageInfo: {
-							newsletterJid: my.ch,
-							serverMessageId: null,
-							newsletterName: 'Join For More Info'
-						},
-						externalAdReply: {
-							title: author,
-							body: packname,
-							showAdAttribution: true,
-							thumbnailUrl: profile,
-							mediaType: 1,
-							previewType: 0,
-							renderLargerThumbnail: true,
-							mediaUrl: my.gh,
-							sourceUrl: my.gh,
-						}
-					}
-				}, { quoted: m })
-			}
-			break
+╰─┬────❍`;
+
+    await naze.sendMessage(m.chat, {
+        text: menunya,
+        contextInfo: {
+            mentionedJid: [m.sender, '0@s.whatsapp.net', owner[0] + '@s.whatsapp.net'],
+            forwardingScore: 10,
+            isForwarded: true,
+            externalAdReply: {
+                title: author,
+                body: packname,
+                showAdAttribution: true,
+                thumbnailUrl: profile,
+                mediaType: 1,
+                previewType: 0,
+                renderLargerThumbnail: true,
+                mediaUrl: my.gh,
+                sourceUrl: my.gh,
+            }
+        }
+    }, { quoted: m });
+}
+break;
+
 
 			default:
 			if (budy.startsWith('>')) {
