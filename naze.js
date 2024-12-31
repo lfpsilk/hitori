@@ -1298,7 +1298,7 @@ m.reply(respon);
 				let exec = promisify(cp.exec).bind(cp)
 				let o
 				try {
-					o = await exec('python3 speed.py')
+					o = await exec('python2 speed.py')
 				} catch (e) {
 					o = e
 				} finally {
@@ -1561,7 +1561,7 @@ break;
 					let teks = args[1] ? args.slice(1).join(' ') : m.quoted.text
 					try {
 						let hasil = await translate(teks, { to: lang, autoCorrect: true })
-						m.reply(`To : ${lang}\n> ${hasil[0]}`)
+						m.reply(`${hasil[0]}`)
 					} catch (e) {
 						m.reply(`Lang *${lang}* Tidak Di temukan!\nSilahkan lihat list, ${prefix + command} list`)
 					}
