@@ -2053,64 +2053,31 @@ break;
     break;
 }
 			case 'ytmp4': case 'ytvideo': case 'ytplayvideo': {
-    if (!text) return m.reply(`Example: ${prefix + command} url_youtube`);
-    if (!text.includes('youtu')) return m.reply('URL tidak valid! Pastikan mengandung YouTube.');
-
-    m.reply(mess.wait);
-    try {
-        // Metode pertama: menggunakan ytMp4
-        const hasil = await ytMp4(text);
-        if (hasil && hasil.result) {
-            await naze.sendMessage(
-                m.chat,
-                {
-                    video: { url: hasil.result },
-                    caption: `*📍Title:* ${hasil.title}\n*✏Description:* ${hasil.desc || 'No description'}\n*🚀Channel:* ${hasil.channel}\n*🗓Upload at:* ${hasil.uploadDate}`,
-                },
-                { quoted: m }
-            );
-        } else {
-            throw new Error('ytMp4 gagal mengembalikan hasil.');
-        }
-    } catch (e1) {
-        console.error('Error ytMp4:', e1);
-        try {
-            // Metode kedua: menggunakan Ytdl
-            const anu = new Ytdl();
-            const hasil = await anu.play(text);
-            const hasil_url = Object.values(hasil.video).find((v) => v.size === 'auto')?.url || Object.values(hasil.video)[0]?.url;
-
-            if (hasil_url) {
-                await naze.sendMessage(
-                    m.chat,
-                    { video: { url: hasil_url }, caption: 'Video berhasil diunduh melalui metode Ytdl.' },
-                    { quoted: m }
-                );
-            } else {
-                throw new Error('Ytdl gagal mengembalikan URL video.');
-            }
-        } catch (e2) {
-            console.error('Error Ytdl:', e2);
-            try {
-                // Metode ketiga: menggunakan allDl
-                const hasil = await allDl(text);
-                if (hasil && hasil.url) {
-                    await naze.sendMessage(
-                        m.chat,
-                        { video: { url: hasil.url }, caption: 'Video berhasil diunduh melalui metode allDl.' },
-                        { quoted: m }
-                    );
-                } else {
-                    throw new Error('allDl gagal mengembalikan hasil.');
-                }
-            } catch (e3) {
-                console.error('Error allDl:', e3);
-                m.reply('Gagal mendownload video!');
-            }
-        }
-    }
-    break;
-}
+				if (!text) return m.reply(`Example: ${prefix + command} url_youtube`)
+				if (!text.includes('youtu')) return m.reply('Url Tidak Mengandung Result Dari Youtube!')
+				m.reply(mess.wait)
+				try {
+					const hasil = await ytMp4(text);
+					await naze.sendMessage(m.chat, { video: hasil.result, caption: `*📍Title:* ${hasil.title}\n*✏Description:* ${hasil.desc ? hasil.desc : ''}\n*🚀Channel:* ${hasil.channel}\n*🗓Upload at:* ${hasil.uploadDate}` }, { quoted: m });
+				} catch (e) {
+					try {
+						const hasil = await multiDownload(text);
+						await naze.sendMessage(m.chat, { video: { url: hasil[0].path }}, { quoted: m });
+					} catch (e) {
+						try {
+							await naze.sendFileUrl(m.chat, 'https://mxmxk-helper.hf.space/yt/dl?url=' + text, '', m)
+						} catch (e) {
+							try {
+								let hasil = await fetchJson(api('hitori','/download/youtube', { url: text }, 'apikey'))
+								await naze.sendFileUrl(m.chat, hasil.result.resultUrl.video[0].download, hasil.result.title, m)
+							} catch (e) {
+								m.reply('Gagal Mendownload Video!')
+							}
+						}
+					}
+				}
+			}
+			break
 			case 'ig': case 'instagram': case 'instadl': case 'igdown': case 'igdl': {
 				if (!text) return m.reply(`Example: ${prefix + command} url_instagram`)
 				if (!text.includes('instagram.com')) return m.reply('Url Tidak Mengandung Result Dari Instagram!')
